@@ -3,7 +3,7 @@
 Simple Python script for downloading **historical market data from Interactive Brokers**
 for **multiple tickers and multiple timeframes**, saved as **standard CSV files**.
 
-Supports stocks/ETFs (e.g. `GLD`) and indexes (e.g. `VIX`).
+Supports stocks/ETFs (e.g. `GLD`) .
 
 ---
 
@@ -38,7 +38,7 @@ Edit the USER AREA in ib_hist.py:
 
 python
 Copy code
-TICKERS = ["GLD", "VIX"]
+TICKERS = ["GLD", "SPY"]
 
 TIMEFRAMES = {
     "1min": "1 min",
