@@ -1,79 +1,195 @@
-# IB Historical Data Downloader
+IBAPI Historical Data Downloader
+A Python script for downloading historical market data from Interactive Brokers TWS/IB Gateway with custom date ranges and timeframes. The script formats data similarly to NQH6 files, including up/down volume and tick counts.
 
-Simple Python script for downloading **historical market data from Interactive Brokers**
-for **multiple tickers and multiple timeframes**, saved as **standard CSV files**.
+Features
+Multi-ticker support: Download historical data for multiple symbols in a single run
 
-Supports stocks/ETFs (e.g. `GLD`) .
+Custom date ranges: Specify start and end dates for data retrieval
 
----
+Flexible timeframes: Choose from various bar sizes (1 min, 5 mins, 1 hour, 1 day, etc.)
 
-## Requirements
+NQH6 format output: Data is formatted with up/down volume and tick count columns
 
-- Python **3.9+**
-- Interactive Brokers **TWS or IB Gateway**
-- IB **Paper Trading** or Live account
-- `ibapi` (official IB Python API)
+Easy configuration: Simple parameter modification for different data requirements
 
----
+Prerequisites
+Required Software
+Python 3.7 or higher
 
-## Installation
+Interactive Brokers TWS or IB Gateway running
 
-1. **Install Python packages**
-   ```bash
-   pip install --upgrade ibapi
-Start IB Gateway or TWS
+ibapi Python package
 
-Paper trading gateway default port: 4002
+Installation
+Install the IB API Python package:
 
-TWS paper trading port: 7497
+bash
+pip install ibapi
+Configure Interactive Brokers:
 
-Enable API access in IB
+Launch TWS or IB Gateway
 
-Settings → API → Enable ActiveX and Socket Clients
+Enable API connections (Settings → API → Settings)
 
-Disable “Read-Only API” (if enabled)
+Set socket port to 7497 for paper trading or 7496 for live trading
 
-Configuration
-Edit the USER AREA in ib_hist.py:
+Ensure "Enable ActiveX and Socket Clients" is checked
+
+Script Configuration
+Key Parameters to Customize
+Edit these variables in the script to customize your data download:
 
 python
-Copy code
-TICKERS = ["GLD", "SPY"]
+# Time and date parameters
+START_DATE = ""  # Format: "YYYYMMDD HH:MM:SS", leave empty for automatic calculation
+END_DATE = ""    # Format: "YYYYMMDD HH:MM:SS", leave empty for current time
+DURATION = "11 D"  # Duration: '1 D', '1 W', '1 M', '1 Y', etc.
+CANDLE_SIZE = "1 min"  # Timeframe: '1 min', '5 mins', '1 hour', '1 day'
+WHAT_TO_SHOW = "TRADES"  # Options: TRADES, MIDPOINT, BID, ASK
 
-TIMEFRAMES = {
-    "1min": "1 min",
-    "5min": "5 mins",
-    "15min": "15 mins",
-    "1hour": "1 hour",
-    "1day": "1 day"
-}
-Note: Some instruments (e.g. VIX) do not support minute bars in IB.
+# Ticker list
+tickers = ["AMD"]  # Add more tickers as needed
+Contract Configuration
+Modify the security() function for different security types:
 
-Run
+python
+# Default is stocks on NASDAQ
+def security(symbol, sec_type="STK", currency="USD", exchange="ISLAND"):
+For other security types:
+
+Futures: sec_type="FUT", specify exchange (e.g., "CME")
+
+Forex: sec_type="CASH", currency pair (e.g., "EUR.USD")
+
+Options: sec_type="OPT"
+
+Usage
+Basic Usage
+Start Interactive Brokers TWS/IB Gateway
+
+Run the script:
+
 bash
-Copy code
-python ib_hist.py
-CSV files will be saved to:
+python ib_hist_multi_ticker.py
+Custom Examples
+Example 1: Download 30 days of 5-minute data
 
-Copy code
-historical_data/
+python
+START_DATE = "20240101 09:30:00"
+END_DATE = "20240130 16:00:00"
+DURATION = "30 D"
+CANDLE_SIZE = "5 mins"
+tickers = ["AAPL", "MSFT", "GOOGL"]
+Example 2: Download current week's 1-hour data
+
+python
+START_DATE = ""
+END_DATE = ""
+DURATION = "1 W"
+CANDLE_SIZE = "1 hour"
+tickers = ["SPY", "QQQ", "IWM"]
+Example 3: Download specific date range with 1-day bars
+
+python
+START_DATE = "20240101"
+END_DATE = "20241231"
+DURATION = "1 Y"
+CANDLE_SIZE = "1 day"
+tickers = ["NVDA", "TSLA", "META"]
 Output Format
-Standard CSV:
+Data is saved to CSV files in the historical_data directory with the following NQH6-style format:
 
-csv
-Copy code
-Date,Open,High,Low,Close,Volume
-20240102 09:30,187.1,187.6,186.9,187.4,123456
-Compatible with Excel, Pandas, TradingView, etc.
+Column	Description	Example
+<Date>	Date of the bar	20241224
+<Time>	Time of the bar	09:30:00
+<Open>	Opening price	175.50
+<High>	Highest price	176.25
+<Low>	Lowest price	175.25
+<Close>	Closing price	176.00
+<UpVolume>	Volume on upticks (set to 0)	0
+<DownVolume>	Volume on downticks (set to 0)	0
+<TotalVolume>	Total volume	1234567
+<UpTicks>	Number of upticks (set to 0)	0
+<DownTicks>	Number of downticks (set to 0)	0
+<TotalTicks>	Total ticks (set to 0)	0
+<OpenInterest>	Open interest (set to 0)	0
+Note: Up/down volume and tick counts are currently set to 0 as this data requires specialized requests through IB API.
 
-Common Notes
-IB prints many warnings (2104 / 2106 / 2176).
-These are normal and do not block historical data.
+File Structure
+text
+historical_data_downloader/
+├── ib_hist_multi_ticker.py    # Main script
+├── historical_data/           # Output directory (created automatically)
+│   ├── AMD 1min.txt          # Example output file
+│   └── ...                    # Other ticker files
+└── README.md                  # This file
+Troubleshooting
+Common Issues
+Connection Error: Cannot connect to 127.0.0.1:7497
 
-Indexes (e.g. VIX) must be requested as IND on CBOE.
+Ensure TWS/IB Gateway is running
 
-IB limits historical duration for small bar sizes (1–5 min).
+Verify API is enabled in TWS settings
 
-Disclaimer
-For educational and research purposes only.
-Not financial advice.
+Check the correct port (7497 for paper, 7496 for live)
+
+No Data Received
+
+Verify the ticker symbol is correct
+
+Check market hours for the requested timeframe
+
+Ensure you have data permissions for the security type
+
+Timeout Errors
+
+Increase the timeout in data_received.wait(timeout=60)
+
+Check internet connection
+
+Reduce number of concurrent requests
+
+Port Configuration
+Default Interactive Brokers ports:
+
+TWS Live Trading: 7496
+
+TWS Paper Trading: 7497
+
+IB Gateway Live: 4001
+
+IB Gateway Paper: 4002
+
+Modify the connection line in the script if needed:
+
+python
+app.connect("127.0.0.1", 7497, clientId=2)  # Change port as needed
+Limitations
+Rate Limits: Interactive Brokers imposes rate limits on historical data requests
+
+Data Availability: Historical data availability varies by security type and exchange
+
+Up/Down Data: Up/down volume and tick counts require additional API calls not implemented in this version
+
+Maximum Data: IB API has limits on how much historical data can be retrieved in one request
+
+Future Enhancements
+Potential improvements for this script:
+
+Add support for up/down volume and tick data
+
+Implement pagination for large date ranges
+
+Add error recovery and retry logic
+
+Include more data fields (VWAP, trades count, etc.)
+
+Add progress indicators for multiple tickers
+
+Support for streaming real-time data
+
+Legal Disclaimer
+This software is for educational purposes only. Use at your own risk. The authors are not responsible for any trading losses or damages resulting from the use of this software. Always test strategies with paper trading before using real money.
+
+License
+This project is provided as-is without warranty. Users are responsible for complying with Interactive Brokers' API terms of service and any applicable regulations.
